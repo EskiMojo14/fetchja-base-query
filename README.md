@@ -18,9 +18,21 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { fetchjaBaseQuery } from "fetchja-base-query";
 
 interface Article {
-  type: string;
+  type: "articles";
   id: string;
   title: string;
+}
+
+interface Person {
+  type: "people";
+  id: string;
+  name: string;
+}
+
+interface Comment {
+  type: "comments";
+  id: string;
+  body: string;
 }
 
 const api = createApi({
@@ -28,12 +40,18 @@ const api = createApi({
     baseURL: "https://api.example.com",
   }),
   endpoints: (builder) => ({
-    getArticle: builder.query<Article, string>({
+    getArticle: builder.query<
+      Article & {
+        author: Person;
+        comments: Comment[];
+      },
+      string
+    >({
       query: (id) => ({
         method: "GET",
         model: `articles/${id}`,
         options: {
-          params: { include: "author" },
+          params: { include: "author,comments" },
         },
       }),
     }),
