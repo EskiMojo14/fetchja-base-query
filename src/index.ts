@@ -7,9 +7,6 @@ export type {
   FetchjaBaseQueryError,
   FetchjaBaseQueryMeta,
   FetchjaBaseQueryOptions,
-  Compute,
-  KeyofUnion,
-  OneOf,
 } from "./types.ts";
 export type { FetchjaResource } from "./resource.ts";
 
