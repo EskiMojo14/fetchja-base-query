@@ -22,9 +22,22 @@ interface Article {
   links?: unknown;
 }
 
+interface ArticlePage {
+  items: Article[];
+  next?: string;
+}
+
+const getLinkUrl = (link: unknown) =>
+  typeof link === "string"
+    ? link
+    : link && typeof link === "object" && "href" in link && typeof link.href === "string"
+      ? link.href
+      : undefined;
+
 function setupApi() {
+  const baseQuery = fetchjaBaseQuery({ baseURL });
   const api = createApi({
-    baseQuery: fetchjaBaseQuery({ baseURL }),
+    baseQuery,
     endpoints: (builder) => ({
       getArticle: builder.query<Article, string>({
         query: (id) => ({
@@ -39,6 +52,20 @@ function setupApi() {
         query: (id) => ({
           kind: "request",
           options: { url: `articles/${id}`, method: "GET", params: { include: "author" } },
+        }),
+      }),
+      listArticles: builder.infiniteQuery<ArticlePage, void, string | undefined>({
+        infiniteQueryOptions: {
+          initialPageParam: undefined,
+          getNextPageParam: (lastPage) => lastPage.next,
+        },
+        query: ({ pageParam }) =>
+          pageParam
+            ? { kind: "request", options: { url: pageParam, method: "GET" } }
+            : { method: "GET", model: "articles", options: { params: { page: { size: 2 } } } },
+        transformResponse: (data, meta): ArticlePage => ({
+          items: data as Article[],
+          next: getLinkUrl(meta?.links?.next),
         }),
       }),
       updateArticle: builder.mutation<Article, { id: string; title: string; authorId: string }>({
@@ -134,6 +161,55 @@ describe("fetchjaBaseQuery", () => {
       id: "raw",
       title: "Raw request",
     });
+  });
+
+  it("follows JSON:API next links for infinite-query pages", async () => {
+    server.use(
+      http.get(`${baseURL}/articles`, ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.has("cursor")) {
+          return HttpResponse.json(
+            {
+              data: [{ type: "articles", id: "2", attributes: { title: "Second" } }],
+              links: { next: null },
+            },
+            { headers: jsonApiHeaders },
+          );
+        }
+
+        expect(url.search).toBe("?page%5Bsize%5D=2");
+
+        return HttpResponse.json(
+          {
+            data: [{ type: "articles", id: "1", attributes: { title: "First" } }],
+            links: { next: "/articles?cursor=next" },
+          },
+          { headers: jsonApiHeaders },
+        );
+      }),
+    );
+
+    const { api, store } = setupApi();
+    const result = await store.dispatch(api.endpoints.listArticles.initiate(undefined));
+
+    expect(result.data?.pages).toEqual([
+      {
+        items: [{ type: "articles", id: "1", title: "First" }],
+        next: "/articles?cursor=next",
+      },
+    ]);
+
+    const nextResult = await store.dispatch(
+      api.endpoints.listArticles.initiate(undefined, { direction: "forward" }),
+    );
+
+    expect(nextResult.data?.pages).toEqual([
+      {
+        items: [{ type: "articles", id: "1", title: "First" }],
+        next: "/articles?cursor=next",
+      },
+      { items: [{ type: "articles", id: "2", title: "Second" }] },
+    ]);
   });
 
   it("updates a resource via a mutation", async () => {
