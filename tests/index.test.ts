@@ -27,15 +27,20 @@ function setupApi() {
     baseQuery: fetchjaBaseQuery({ baseURL }),
     endpoints: (builder) => ({
       getArticle: builder.query<Article, string>({
-        query: (id) => `articles/${id}`,
+        query: (id) => ({ method: "GET", model: `articles/${id}` }),
         // `meta` carries the document's top-level `links`/`meta`/`jsonapi`, since `data` is just the resource.
-        transformResponse: (response, meta) => ({ ...(response as Article), links: meta?.links }),
+        transformResponse: (response: Article, meta) => ({ ...response, links: meta?.links }),
+      }),
+      getArticleWithRequest: builder.query<Article, string>({
+        query: (id) => ({
+          kind: "request",
+          options: { url: `articles/${id}`, method: "GET" },
+        }),
       }),
       updateArticle: builder.mutation<Article, { id: string; title: string; authorId: string }>({
         query: ({ id, title, authorId }) => ({
-          url: `articles/${id}`,
           method: "PATCH",
-          type: "articles",
+          model: "article",
           body: { id, title, author: { type: "people", id: authorId } },
         }),
       }),
@@ -98,6 +103,32 @@ describe("fetchjaBaseQuery", () => {
     expect(result.error).toMatchObject({
       status: 404,
       errors: [{ status: "404", title: "Not Found", detail: "Article not found" }],
+    });
+  });
+
+  it("supports the low-level request escape hatch", async () => {
+    server.use(
+      http.get(`${baseURL}/articles/raw`, () =>
+        HttpResponse.json(
+          {
+            data: {
+              type: "articles",
+              id: "raw",
+              attributes: { title: "Raw request" },
+            },
+          },
+          { headers: jsonApiHeaders },
+        ),
+      ),
+    );
+
+    const { api, store } = setupApi();
+    const result = await store.dispatch(api.endpoints.getArticleWithRequest.initiate("raw"));
+
+    expect(result.data).toEqual({
+      type: "articles",
+      id: "raw",
+      title: "Raw request",
     });
   });
 
