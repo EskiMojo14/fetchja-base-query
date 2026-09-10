@@ -5,7 +5,7 @@ An RTK Query `baseQuery` backed by the [fetchja](https://fetchja.dev/) JSON:API 
 ## Install
 
 ```bash
-pnpm add fetchja @reduxjs/toolkit
+pnpm add fetchja @reduxjs/toolkit fetchja-base-query
 ```
 
 ## Usage
