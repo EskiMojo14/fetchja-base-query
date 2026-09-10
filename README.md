@@ -2,6 +2,122 @@
 
 An RTK Query `baseQuery` backed by the [fetchja](https://fetchja.dev/) JSON:API client.
 
+## Install
+
+```bash
+pnpm add fetchja @reduxjs/toolkit
+```
+
+## Usage
+
+Create the base query with the Fetchja client options, then return a typed
+request descriptor from each endpoint's `query` function:
+
+```ts
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { fetchjaBaseQuery } from "fetchja-base-query";
+
+interface Article {
+  type: string;
+  id: string;
+  title: string;
+}
+
+const api = createApi({
+  baseQuery: fetchjaBaseQuery({
+    baseURL: "https://api.example.com",
+  }),
+  endpoints: (builder) => ({
+    getArticle: builder.query<Article, string>({
+      query: (id) => ({
+        method: "GET",
+        model: `articles/${id}`,
+        options: {
+          params: { include: "author" },
+        },
+      }),
+    }),
+  }),
+});
+```
+
+The base query uses Fetchja's verb methods, so resource paths are handled with
+Fetchja's casing and pluralization rules. The response's resource data is
+returned as RTK Query `data`.
+
+## API
+
+### `fetchjaBaseQuery(options?)`
+
+Creates an RTK Query `baseQuery` backed by Fetchja. Pass either Fetchja options
+or an existing `Fetchja` instance.
+
+```ts
+fetchjaBaseQuery({
+  baseURL: "https://api.example.com",
+  headers: { Authorization: "Bearer token" },
+});
+```
+
+### Query descriptors
+
+The normal descriptor forms are:
+
+```ts
+// Read
+{ method: "GET", model: "articles/1", options?: ... }
+
+// Create
+{ method: "POST", model: "articles", body: { title: "Hello" }, options?: ... }
+
+// Update. Fetchja appends `body.id` to the model path.
+{ method: "PATCH", model: "article", body: { id: "1", title: "Updated" }, options?: ... }
+
+// Delete
+{ method: "DELETE", model: "article", id: "1", options?: ... }
+```
+
+`options` is passed through to Fetchja, except that `url`, `method`, and
+`body` are controlled by the descriptor. It can contain request parameters,
+headers, a resource `type`, a JSON:API `document`, or `raw`.
+
+### Request escape hatch
+
+For methods or payloads not covered by the built-in verbs, use the low-level
+request descriptor. It passes the options directly to Fetchja's `request`:
+
+```ts
+query: () => ({
+  kind: "request",
+  options: {
+    url: "bulk",
+    method: "POST",
+    body: "...",
+    raw: true,
+  },
+});
+```
+
+This is useful for custom HTTP methods, raw JSON:API documents, extension
+requests, and endpoints that do not follow resource CRUD conventions.
+
+### Response metadata
+
+Resource data is returned as `data`. HTTP and top-level JSON:API metadata is
+returned as the base query metadata and is available to `transformResponse`:
+
+```ts
+transformResponse: (data, meta) => ({
+  resource: data,
+  links: meta?.links,
+  status: meta?.status,
+});
+```
+
+The metadata includes `status`, `statusText`, `headers`, and the document-level
+`meta`, `links`, and `jsonapi` members. Resource-level Fetchja metadata remains
+on the resource's `$` field.
+
 ## Development
 
 - Install dependencies:
