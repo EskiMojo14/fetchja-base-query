@@ -2,8 +2,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { createApi } from "@reduxjs/toolkit/query";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vite-plus/test";
-import { fetchjaBaseQuery } from "../src/index.ts";
-import { server } from "./setup.ts";
+import { fetchjaBaseQuery } from "./index.ts";
+import { server } from "../tests/setup.ts";
 
 const baseURL = "https://api.example.test";
 const jsonApiHeaders = { "Content-Type": "application/vnd.api+json" };

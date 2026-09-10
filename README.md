@@ -119,6 +119,46 @@ The metadata includes `status`, `statusText`, `headers`, and the document-level
 `meta`, `links`, and `jsonapi` members. Resource-level Fetchja metadata remains
 on the resource's `$` field.
 
+### Typing Fetchja's transformed data
+
+OpenAPI-generated JSON:API models usually describe the wire format, where
+attributes are nested and relationships contain resource identifiers. Use
+`FetchjaResource` to derive the flattened shape returned by Fetchja:
+
+```ts
+import type { FetchjaResource } from "fetchja-base-query";
+
+interface RawArticle {
+  type: "articles";
+  id: string;
+  attributes: { title: string };
+  relationships: {
+    author: { data: { type: "people"; id: string } };
+    comments: { data: { type: "comments"; id: string }[] };
+  };
+}
+
+interface RawPerson {
+  type: "people";
+  id: string;
+  attributes: { name: string };
+}
+
+interface RawComment {
+  type: "comments";
+  id: string;
+  attributes: { body: string };
+}
+
+type Article = FetchjaResource<RawArticle, RawPerson | RawComment>;
+```
+
+`Article` has `type`, `id`, and `title` at the top level, with `author` as a
+`RawPerson`-derived object and `comments` as an array of `RawComment`-derived
+objects. Resource-level JSON:API metadata is represented by `$`, matching
+Fetchja's runtime output. If a relationship's resource type is not present in
+the `included` union, the relationship remains its raw identifier shape.
+
 ## Development
 
 - Install dependencies:

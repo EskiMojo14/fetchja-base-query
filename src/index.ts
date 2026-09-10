@@ -1,54 +1,17 @@
-import {
-  Fetchja,
-  FetchjaError,
-  type FetchjaOptions,
-  type RequestOptions,
-  type JsonApiError,
-  type JsonApiMeta,
-  type JsonApiLinks,
-  type JsonApiObject,
-} from "fetchja";
+import { Fetchja, FetchjaError, type FetchjaOptions } from "fetchja";
 import type { BaseQueryFn } from "@reduxjs/toolkit/query";
+import type { FetchjaBaseQueryArgs, FetchjaBaseQueryError, FetchjaBaseQueryMeta } from "./types.ts";
 
-export type KeyofUnion<T> = T extends T ? keyof T : never;
-export type OneOf<T, K extends KeyofUnion<T> = KeyofUnion<T>> = T extends T
-  ? T & Partial<Record<Exclude<K, keyof T>, never>>
-  : never;
-
-/** Options passed through to a Fetchja verb method. */
-export type FetchjaBaseQueryOptions = Omit<RequestOptions, "url" | "method" | "body">;
-
-/** The arguments accepted by a query created with {@link fetchjaBaseQuery}. */
-export type FetchjaBaseQueryArgs = OneOf<
-  | { method: "GET"; model: string; options?: FetchjaBaseQueryOptions }
-  | {
-      method: "POST" | "PATCH";
-      model: string;
-      body: Record<string, unknown>;
-      options?: FetchjaBaseQueryOptions;
-    }
-  | { method: "DELETE"; model: string; id: string; options?: FetchjaBaseQueryOptions }
-  | { kind: "request"; options: RequestOptions & { url: string } }
->;
-
-/** The shape of the error surfaced to RTK Query when a request fails. */
-export interface FetchjaBaseQueryError {
-  status?: number;
-  statusText?: string;
-  errors?: JsonApiError[];
-  data?: Record<string, unknown>;
-}
-
-/** The response metadata surfaced to RTK Query alongside a successful result. */
-export interface FetchjaBaseQueryMeta {
-  status: number;
-  statusText: string;
-  headers: Record<string, string>;
-  /** The document's top-level `meta`, `links`, and `jsonapi` members, if present. */
-  meta?: JsonApiMeta;
-  links?: JsonApiLinks;
-  jsonapi?: JsonApiObject;
-}
+export type {
+  FetchjaBaseQueryArgs,
+  FetchjaBaseQueryError,
+  FetchjaBaseQueryMeta,
+  FetchjaBaseQueryOptions,
+  Compute,
+  KeyofUnion,
+  OneOf,
+} from "./types.ts";
+export type { FetchjaResource } from "./resource.ts";
 
 /**
  * Creates an RTK Query `baseQuery` backed by a {@link Fetchja} client.
