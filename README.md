@@ -16,24 +16,7 @@ request descriptor from each endpoint's `query` function:
 ```ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { fetchjaBaseQuery } from "fetchja-base-query";
-
-interface Article {
-  type: "articles";
-  id: string;
-  title: string;
-}
-
-interface Person {
-  type: "people";
-  id: string;
-  name: string;
-}
-
-interface Comment {
-  type: "comments";
-  id: string;
-  body: string;
-}
+import { Article, Person, Comment } from "./models";
 
 const api = createApi({
   baseQuery: fetchjaBaseQuery({

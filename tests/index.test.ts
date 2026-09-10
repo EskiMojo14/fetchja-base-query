@@ -27,14 +27,18 @@ function setupApi() {
     baseQuery: fetchjaBaseQuery({ baseURL }),
     endpoints: (builder) => ({
       getArticle: builder.query<Article, string>({
-        query: (id) => ({ method: "GET", model: `articles/${id}` }),
+        query: (id) => ({
+          method: "GET",
+          model: `articles/${id}`,
+          options: { params: { include: "author" } },
+        }),
         // `meta` carries the document's top-level `links`/`meta`/`jsonapi`, since `data` is just the resource.
         transformResponse: (response: Article, meta) => ({ ...response, links: meta?.links }),
       }),
       getArticleWithRequest: builder.query<Article, string>({
         query: (id) => ({
           kind: "request",
-          options: { url: `articles/${id}`, method: "GET" },
+          options: { url: `articles/${id}`, method: "GET", params: { include: "author" } },
         }),
       }),
       updateArticle: builder.mutation<Article, { id: string; title: string; authorId: string }>({
