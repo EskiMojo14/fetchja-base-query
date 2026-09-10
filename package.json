@@ -1,7 +1,7 @@
 {
-  "name": "json-api-helpers",
+  "name": "fetchja-base-query",
   "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
+  "description": "An RTK Query baseQuery backed by the fetchja JSON:API client.",
   "homepage": "https://github.com/author/library#readme",
   "bugs": {
     "url": "https://github.com/author/library/issues"

@@ -1,6 +1,6 @@
-# vite-plus-starter
+# fetchja-base-query
 
-A starter for creating a Vite Plus project.
+An RTK Query `baseQuery` backed by the [fetchja](https://fetchja.dev/) JSON:API client.
 
 ## Development
 
