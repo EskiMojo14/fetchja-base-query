@@ -1,6 +1,9 @@
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+  test: {
+    setupFiles: ["./tests/setup.ts"],
+  },
   staged: {
     "*": "vp check --fix",
   },
