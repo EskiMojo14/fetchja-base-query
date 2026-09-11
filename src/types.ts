@@ -17,19 +17,45 @@ export type Compute<T> = { [K in keyof T]: T[K] } & unknown;
 /** Options passed through to a Fetchja verb method. */
 export type FetchjaBaseQueryOptions = Omit<RequestOptions, "url" | "method" | "body">;
 
+export namespace FetchjaBaseQueryArgs {
+  export interface Get extends FetchjaBaseQueryOptions {
+    method: "GET";
+    model: string;
+  }
+
+  export interface Post extends FetchjaBaseQueryOptions {
+    method: "POST";
+    model: string;
+    body: Record<string, unknown>;
+  }
+
+  export interface Patch extends FetchjaBaseQueryOptions {
+    method: "PATCH";
+    model: string;
+    body: Record<string, unknown>;
+  }
+
+  export interface Delete extends FetchjaBaseQueryOptions {
+    method: "DELETE";
+    model: string;
+    id: string;
+  }
+
+  export interface Request extends Omit<RequestOptions, "url"> {
+    kind: "request";
+    url: string;
+  }
+}
+
 /** The arguments accepted by a query created with {@link fetchjaBaseQuery}. */
 export type FetchjaBaseQueryArgs =
   | string
   | OneOf<
-      | { method: "GET"; model: string; options?: FetchjaBaseQueryOptions }
-      | {
-          method: "POST" | "PATCH";
-          model: string;
-          body: Record<string, unknown>;
-          options?: FetchjaBaseQueryOptions;
-        }
-      | { method: "DELETE"; model: string; id: string; options?: FetchjaBaseQueryOptions }
-      | { kind: "request"; options: RequestOptions & { url: string } }
+      | FetchjaBaseQueryArgs.Get
+      | FetchjaBaseQueryArgs.Post
+      | FetchjaBaseQueryArgs.Patch
+      | FetchjaBaseQueryArgs.Delete
+      | FetchjaBaseQueryArgs.Request
     >;
 
 /** The shape of the error surfaced to RTK Query when a request fails. */

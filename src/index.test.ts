@@ -43,7 +43,7 @@ function setupApi() {
         query: (id) => ({
           method: "GET",
           model: `articles/${id}`,
-          options: { params: { include: "author" } },
+          params: { include: "author" },
         }),
         // `meta` carries the document's top-level `links`/`meta`/`jsonapi`, since `data` is just the resource.
         transformResponse: (response: Article, meta) => ({ ...response, links: meta?.links }),
@@ -54,7 +54,9 @@ function setupApi() {
       getArticleWithRequest: builder.query<Article, string>({
         query: (id) => ({
           kind: "request",
-          options: { url: `articles/${id}`, method: "GET", params: { include: "author" } },
+          url: `articles/${id}`,
+          method: "GET",
+          params: { include: "author" },
         }),
       }),
       listArticles: builder.infiniteQuery<ArticlePage, void, string | undefined>({
@@ -64,8 +66,8 @@ function setupApi() {
         },
         query: ({ pageParam }) =>
           pageParam
-            ? { kind: "request", options: { url: pageParam, method: "GET" } }
-            : { method: "GET", model: "articles", options: { params: { page: { size: 2 } } } },
+            ? { kind: "request", url: pageParam, method: "GET" }
+            : { method: "GET", model: "articles", params: { page: { size: 2 } } },
         transformResponse: (data, meta): ArticlePage => ({
           items: data as Article[],
           next: getLinkUrl(meta?.links?.next),
@@ -290,7 +292,9 @@ describe("fetchjaBaseQuery", () => {
     const baseQuery = fetchjaBaseQuery({ baseURL });
     const result = await baseQuery({
       kind: "request",
-      options: { url: "articles/raw-extra", method: "GET", raw: true },
+      url: "articles/raw-extra",
+      method: "GET",
+      raw: true,
     });
 
     assert(!("error" in result), "Expected query to succeed");

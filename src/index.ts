@@ -25,21 +25,30 @@ export function fetchjaBaseQuery(options?: FetchjaOptions | Fetchja) {
       if (typeof arg === "string") {
         response = client.get(arg);
       } else if (arg.kind === "request") {
-        response = client.request(arg.options);
+        const { kind: _kind, ...options } = arg;
+        response = client.request(options);
       } else {
         switch (arg.method) {
-          case "GET":
-            response = client.get(arg.model, arg.options);
+          case "GET": {
+            const { model, ...options } = arg;
+            response = client.get(model, options);
             break;
-          case "POST":
-            response = client.post(arg.model, arg.body, arg.options);
+          }
+          case "POST": {
+            const { model, body, ...options } = arg;
+            response = client.post(model, body, options);
             break;
-          case "PATCH":
-            response = client.patch(arg.model, arg.body, arg.options);
+          }
+          case "PATCH": {
+            const { model, body, ...options } = arg;
+            response = client.patch(model, body, options);
             break;
-          case "DELETE":
-            response = client.delete(arg.model, arg.id, arg.options);
+          }
+          case "DELETE": {
+            const { model, id, ...options } = arg;
+            response = client.delete(model, id, options);
             break;
+          }
         }
       }
 
@@ -68,7 +77,7 @@ export function fetchjaBaseQuery(options?: FetchjaOptions | Fetchja) {
     FetchjaBaseQueryArgs,
     unknown,
     FetchjaBaseQueryError,
-    Record<string, unknown>,
+    {},
     FetchjaBaseQueryMeta
   >;
 }

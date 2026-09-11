@@ -33,9 +33,7 @@ const api = createApi({
       query: (id) => ({
         method: "GET",
         model: `articles/${id}`,
-        options: {
-          params: { include: "author,comments" },
-        },
+        params: { include: "author,comments" },
       }),
     }),
   }),
@@ -69,36 +67,34 @@ The normal descriptor forms are:
 "articles/1"
 
 // Read
-{ method: "GET", model: "articles/1", options?: ... }
+{ method: "GET", model: "articles/1", params?: ..., headers?: ... }
 
 // Create
-{ method: "POST", model: "articles", body: { title: "Hello" }, options?: ... }
+{ method: "POST", model: "articles", body: { title: "Hello" }, params?: ... }
 
 // Update. Fetchja appends `body.id` to the model path.
-{ method: "PATCH", model: "article", body: { id: "1", title: "Updated" }, options?: ... }
+{ method: "PATCH", model: "article", body: { id: "1", title: "Updated" } }
 
 // Delete
-{ method: "DELETE", model: "article", id: "1", options?: ... }
+{ method: "DELETE", model: "article", id: "1" }
 ```
 
-`options` is passed through to Fetchja, except that `url`, `method`, and
-`body` are controlled by the descriptor. It can contain request parameters,
-headers, a resource `type`, a JSON:API `document`, or `raw`.
+Extra options (such as query `params`, `headers`, a resource `type`, a JSON:API
+`document`, or `raw`) can be included directly on the descriptor object alongside
+`method`, `model`, `body`, and `id`.
 
 ### Request escape hatch
 
 For methods or payloads not covered by the built-in verbs, use the low-level
-request descriptor. It passes the options directly to Fetchja's `request`:
+request descriptor. It passes options directly to Fetchja's `request`:
 
 ```ts
 query: () => ({
   kind: "request",
-  options: {
-    url: "bulk",
-    method: "POST",
-    body: "...",
-    raw: true,
-  },
+  url: "bulk",
+  method: "POST",
+  body: "...",
+  raw: true,
 });
 ```
 
@@ -160,12 +156,13 @@ const api = createApi({
         pageParam
           ? {
               kind: "request",
-              options: { url: pageParam, method: "GET" },
+              url: pageParam,
+              method: "GET",
             }
           : {
               method: "GET",
               model: "articles",
-              options: { params: { page: { size: 20 } } },
+              params: { page: { size: 20 } },
             },
       transformResponse: (data, meta): ArticlePage => ({
         items: data as Article[],
