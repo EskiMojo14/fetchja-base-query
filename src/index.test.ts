@@ -9,13 +9,13 @@ const baseURL = "https://api.example.test";
 const jsonApiHeaders = { "Content-Type": "application/vnd.api+json" };
 
 interface Person {
-  type: string;
+  type: "people";
   id: string;
   name: string;
 }
 
 interface Article {
-  type: string;
+  type: "articles";
   id: string;
   title: string;
   author?: Person;
