@@ -15,6 +15,8 @@ export type { FetchjaResource } from "./resource.ts";
  *
  * @param options - {@link FetchjaOptions} to build a client with, or an
  * existing {@link Fetchja} instance to reuse.
+ * @returns An RTK Query base query function that returns resource data on
+ * success and a {@link FetchjaBaseQueryError} on Fetchja request failures.
  */
 export function fetchjaBaseQuery(options?: FetchjaOptions | Fetchja) {
   const client = options instanceof Fetchja ? options : new Fetchja(options);
