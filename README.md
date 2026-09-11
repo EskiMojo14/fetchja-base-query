@@ -119,8 +119,9 @@ transformResponse: (data, meta) => ({
 ```
 
 The metadata includes `status`, `statusText`, `headers`, and the document-level
-`meta`, `links`, and `jsonapi` members. Resource-level Fetchja metadata remains
-on the resource's `$` field.
+`meta`, `links`, and `jsonapi` members, as well as any extra top-level properties
+present on the response (such as when using `raw: true` or custom Fetchja extensions).
+Resource-level Fetchja metadata remains on the resource's `$` field.
 
 ### Infinite queries with pagination links
 

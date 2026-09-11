@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createApi } from "@reduxjs/toolkit/query";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vite-plus/test";
+import { assert, describe, expect, it } from "vite-plus/test";
 import { fetchjaBaseQuery } from "./index.ts";
 import { server } from "../tests/setup.ts";
 
@@ -246,6 +246,58 @@ describe("fetchjaBaseQuery", () => {
       },
       { items: [{ type: "articles", id: "2", title: "Second" }] },
     ]);
+  });
+
+  it("passes extra top-level response properties through to meta", async () => {
+    server.use(
+      http.get(`${baseURL}/articles/100`, () =>
+        HttpResponse.json(
+          {
+            data: { type: "articles", id: "100", attributes: { title: "Extra" } },
+            meta: { total: 42 },
+          },
+          { headers: jsonApiHeaders },
+        ),
+      ),
+    );
+
+    const baseQuery = fetchjaBaseQuery({ baseURL });
+    const result = await baseQuery({ method: "GET", model: "articles/100" });
+
+    assert(!("error" in result), "Expected query to succeed");
+
+    expect(result.data).toEqual({ type: "articles", id: "100", title: "Extra" });
+    expect(result.meta).toMatchObject({
+      status: 200,
+      statusText: "OK",
+      meta: { total: 42 },
+    });
+  });
+
+  it("preserves extra top-level keys when raw option is enabled", async () => {
+    server.use(
+      http.get(`${baseURL}/articles/raw-extra`, () =>
+        HttpResponse.json(
+          {
+            data: { type: "articles", id: "1", attributes: { title: "Raw" } },
+            extraTopLevelKey: "extraValue",
+          },
+          { headers: jsonApiHeaders },
+        ),
+      ),
+    );
+
+    const baseQuery = fetchjaBaseQuery({ baseURL });
+    const result = await baseQuery({
+      kind: "request",
+      options: { url: "articles/raw-extra", method: "GET", raw: true },
+    });
+
+    assert(!("error" in result), "Expected query to succeed");
+
+    expect(result.meta).toMatchObject({
+      extraTopLevelKey: "extraValue",
+    });
   });
 
   it("updates a resource via a mutation", async () => {

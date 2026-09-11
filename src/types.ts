@@ -42,6 +42,8 @@ export interface FetchjaBaseQueryError {
 
 /** The response metadata surfaced to RTK Query alongside a successful result. */
 export interface FetchjaBaseQueryMeta {
+  // extra top-level keys added by custom clients will be preserved here.
+  [key: string]: unknown;
   status: number;
   statusText: string;
   headers: Record<string, string>;

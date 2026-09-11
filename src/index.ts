@@ -16,18 +16,10 @@ export type { FetchjaResource } from "./resource.ts";
  * @param options - {@link FetchjaOptions} to build a client with, or an
  * existing {@link Fetchja} instance to reuse.
  */
-export function fetchjaBaseQuery(
-  options?: FetchjaOptions | Fetchja,
-): BaseQueryFn<
-  FetchjaBaseQueryArgs,
-  unknown,
-  FetchjaBaseQueryError,
-  Record<string, unknown>,
-  FetchjaBaseQueryMeta
-> {
+export function fetchjaBaseQuery(options?: FetchjaOptions | Fetchja) {
   const client = options instanceof Fetchja ? options : new Fetchja(options);
 
-  return async (arg) => {
+  return (async (arg) => {
     try {
       let response: Promise<Record<string, unknown>>;
       if (typeof arg === "string") {
@@ -53,10 +45,10 @@ export function fetchjaBaseQuery(
 
       // `request` merges HTTP metadata and the document's own `meta`/`links`/`jsonapi`
       // in with `data`, so pull them apart and leave `data` as just the resource(s).
-      const { status, statusText, headers, data, meta, links, jsonapi } = await response;
+      const { data, ...meta } = await response;
       return {
         data,
-        meta: { status, statusText, headers, meta, links, jsonapi } as FetchjaBaseQueryMeta,
+        meta: meta as unknown as FetchjaBaseQueryMeta,
       };
     } catch (error) {
       if (error instanceof FetchjaError) {
@@ -72,5 +64,11 @@ export function fetchjaBaseQuery(
 
       throw error;
     }
-  };
+  }) satisfies BaseQueryFn<
+    FetchjaBaseQueryArgs,
+    unknown,
+    FetchjaBaseQueryError,
+    Record<string, unknown>,
+    FetchjaBaseQueryMeta
+  >;
 }
