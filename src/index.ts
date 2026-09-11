@@ -30,7 +30,9 @@ export function fetchjaBaseQuery(
   return async (arg) => {
     try {
       let response: Promise<Record<string, unknown>>;
-      if (arg.kind === "request") {
+      if (typeof arg === "string") {
+        response = client.get(arg);
+      } else if (arg.kind === "request") {
         response = client.request(arg.options);
       } else {
         switch (arg.method) {

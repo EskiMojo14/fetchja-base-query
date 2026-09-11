@@ -65,6 +65,9 @@ fetchjaBaseQuery({
 The normal descriptor forms are:
 
 ```ts
+// Read shorthand
+"articles/1"
+
 // Read
 { method: "GET", model: "articles/1", options?: ... }
 

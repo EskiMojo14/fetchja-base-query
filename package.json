@@ -38,6 +38,7 @@
     "@reduxjs/toolkit": "^2.12.0",
     "@types/node": "^26.1.1",
     "bumpp": "^11.1.0",
+    "mix-n-matchers": "^3.0.0",
     "msw": "^2.15.0",
     "typescript": "^7.0.2",
     "vite": "catalog:",

@@ -48,6 +48,9 @@ function setupApi() {
         // `meta` carries the document's top-level `links`/`meta`/`jsonapi`, since `data` is just the resource.
         transformResponse: (response: Article, meta) => ({ ...response, links: meta?.links }),
       }),
+      getArticles: builder.query<Article[], void>({
+        query: () => "articles",
+      }),
       getArticleWithRequest: builder.query<Article, string>({
         query: (id) => ({
           kind: "request",
@@ -137,6 +140,36 @@ describe("fetchjaBaseQuery", () => {
     });
   });
 
+  it("supports strings as GET model shorthands", async () => {
+    server.use(
+      http.get(`${baseURL}/articles`, () =>
+        HttpResponse.json(
+          {
+            data: [
+              {
+                type: "articles",
+                id: "1",
+                attributes: { title: "Shorthand" },
+              },
+            ],
+          },
+          { headers: jsonApiHeaders },
+        ),
+      ),
+    );
+
+    const { api, store } = setupApi();
+    const result = await store.dispatch(api.endpoints.getArticles.initiate());
+
+    expect(result.data).toEqual([
+      {
+        type: "articles",
+        id: "1",
+        title: "Shorthand",
+      },
+    ]);
+  });
+
   it("supports the low-level request escape hatch", async () => {
     server.use(
       http.get(`${baseURL}/articles/raw`, () =>
@@ -164,6 +197,8 @@ describe("fetchjaBaseQuery", () => {
   });
 
   it("follows JSON:API next links for infinite-query pages", async () => {
+    let initialRequestUrl: URL | undefined;
+
     server.use(
       http.get(`${baseURL}/articles`, ({ request }) => {
         const url = new URL(request.url);
@@ -177,7 +212,7 @@ describe("fetchjaBaseQuery", () => {
           );
         }
 
-        expect(url.search).toBe("?page%5Bsize%5D=2");
+        initialRequestUrl = url;
 
         return HttpResponse.json(
           {
@@ -192,6 +227,7 @@ describe("fetchjaBaseQuery", () => {
     const { api, store } = setupApi();
     const result = await store.dispatch(api.endpoints.listArticles.initiate(undefined));
 
+    expect(initialRequestUrl).toHaveSearchParam("page[size]", "2");
     expect(result.data?.pages).toEqual([
       {
         items: [{ type: "articles", id: "1", title: "First" }],

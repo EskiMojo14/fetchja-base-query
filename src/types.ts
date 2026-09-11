@@ -18,17 +18,19 @@ export type Compute<T> = { [K in keyof T]: T[K] } & unknown;
 export type FetchjaBaseQueryOptions = Omit<RequestOptions, "url" | "method" | "body">;
 
 /** The arguments accepted by a query created with {@link fetchjaBaseQuery}. */
-export type FetchjaBaseQueryArgs = OneOf<
-  | { method: "GET"; model: string; options?: FetchjaBaseQueryOptions }
-  | {
-      method: "POST" | "PATCH";
-      model: string;
-      body: Record<string, unknown>;
-      options?: FetchjaBaseQueryOptions;
-    }
-  | { method: "DELETE"; model: string; id: string; options?: FetchjaBaseQueryOptions }
-  | { kind: "request"; options: RequestOptions & { url: string } }
->;
+export type FetchjaBaseQueryArgs =
+  | string
+  | OneOf<
+      | { method: "GET"; model: string; options?: FetchjaBaseQueryOptions }
+      | {
+          method: "POST" | "PATCH";
+          model: string;
+          body: Record<string, unknown>;
+          options?: FetchjaBaseQueryOptions;
+        }
+      | { method: "DELETE"; model: string; id: string; options?: FetchjaBaseQueryOptions }
+      | { kind: "request"; options: RequestOptions & { url: string } }
+    >;
 
 /** The shape of the error surfaced to RTK Query when a request fails. */
 export interface FetchjaBaseQueryError {

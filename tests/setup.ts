@@ -1,5 +1,6 @@
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll } from "vite-plus/test";
+import "mix-n-matchers/vitest";
 
 export const server = setupServer();
 
