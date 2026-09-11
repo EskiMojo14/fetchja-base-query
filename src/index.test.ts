@@ -306,13 +306,11 @@ describe("fetchjaBaseQuery", () => {
   });
 
   it("runs configured JSON:API Atomic Operations batches", async () => {
-    let requestBody: unknown;
-    let contentType: string | null = null;
+    let capturedRequest: Request | undefined;
 
     server.use(
       http.post(`${baseURL}/operations`, async ({ request }) => {
-        requestBody = await request.json();
-        contentType = request.headers.get("Content-Type");
+        capturedRequest = request;
 
         return HttpResponse.json(
           {
@@ -355,7 +353,7 @@ describe("fetchjaBaseQuery", () => {
 
     expect(result.data).toEqual([{ type: "articles", id: "1", title: "Atomic" }, null]);
 
-    expect(requestBody).toEqual({
+    await expect(capturedRequest).toHaveJSONBody({
       "atomic:operations": [
         {
           op: "add",
@@ -364,7 +362,10 @@ describe("fetchjaBaseQuery", () => {
         { op: "remove", ref: { type: "articles", id: "2" } },
       ],
     });
-    expect(contentType).toContain('ext="https://jsonapi.org/ext/atomic"');
+    expect(capturedRequest).toHaveHeader(
+      "Content-Type",
+      expect.stringContaining('ext="https://jsonapi.org/ext/atomic"'),
+    );
   });
 
   it("explains how to enable atomic operations when the extension is missing", async () => {
@@ -376,11 +377,11 @@ describe("fetchjaBaseQuery", () => {
   });
 
   it("updates a resource via a mutation", async () => {
-    let requestBody: unknown;
+    let capturedRequest: Request | undefined;
 
     server.use(
       http.patch(`${baseURL}/articles/1`, async ({ request }) => {
-        requestBody = await request.json();
+        capturedRequest = request;
 
         return HttpResponse.json(
           {
@@ -402,7 +403,7 @@ describe("fetchjaBaseQuery", () => {
       api.endpoints.updateArticle.initiate({ id: "1", title: "Updated!", authorId: "9" }),
     );
 
-    expect(requestBody).toEqual({
+    await expect(capturedRequest).toHaveJSONBody({
       data: {
         type: "articles",
         id: "1",
