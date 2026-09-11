@@ -101,6 +101,38 @@ query: () => ({
 This is useful for custom HTTP methods, raw JSON:API documents, extension
 requests, and endpoints that do not follow resource CRUD conventions.
 
+### Atomic Operations
+
+Fetchja supports the JSON:API Atomic Operations extension. Configure it on the
+Fetchja client, then return an `atomic` descriptor from an RTK Query mutation:
+
+```ts
+import { Fetchja } from "fetchja";
+import { AtomicOperations } from "fetchja/atomic";
+import { fetchjaBaseQuery } from "fetchja-base-query";
+
+const baseQuery = fetchjaBaseQuery({
+  baseURL: "https://api.example.com",
+  extensions: [AtomicOperations],
+});
+
+// In an endpoint definition:
+query: () => ({
+  kind: "atomic",
+  operations: (op) => [
+    op.add("author", { lid: "a1", name: "dgeb" }),
+    op.add("article", {
+      title: "JSON:API paints my bikeshed!",
+      author: { type: "authors", lid: "a1" },
+    }),
+  ],
+});
+```
+
+The mutation's `data` is Fetchja's positional `results` array: one flattened
+resource (or `null`) for each operation, in order. The extension sends one
+request to its configured operations endpoint, which defaults to `operations`.
+
 ### Response metadata
 
 Resource data is returned as `data`. HTTP and top-level JSON:API metadata is

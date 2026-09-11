@@ -5,6 +5,7 @@ import type {
   JsonApiObject,
   RequestOptions,
 } from "fetchja";
+import type { Operation, OperationBuilder } from "fetchja/atomic";
 
 export type KeyofUnion<T> = T extends T ? keyof T : never;
 export type OneOf<T, K extends KeyofUnion<T> = KeyofUnion<T>> = T extends T
@@ -64,6 +65,14 @@ export namespace FetchjaBaseQueryArgs {
     /** The request path, relative to the configured base URL. */
     url: string;
   }
+
+  /** Describes a JSON:API Atomic Operations request. */
+  export interface Atomic extends FetchjaBaseQueryOptions {
+    /** Identifies this as a JSON:API Atomic Operations request. */
+    kind: "atomic";
+    /** Builds the ordered operations sent as one server-atomic batch. */
+    operations: (op: OperationBuilder) => Operation[];
+  }
 }
 
 /** The arguments accepted by a query created with {@link fetchjaBaseQuery}. */
@@ -75,6 +84,7 @@ export type FetchjaBaseQueryArgs =
       | FetchjaBaseQueryArgs.Patch
       | FetchjaBaseQueryArgs.Delete
       | FetchjaBaseQueryArgs.Request
+      | FetchjaBaseQueryArgs.Atomic
     >;
 
 /** The shape of the error surfaced to RTK Query when a request fails. */

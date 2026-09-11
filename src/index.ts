@@ -29,6 +29,22 @@ export function fetchjaBaseQuery(options?: FetchjaOptions | Fetchja) {
       } else if (arg.kind === "request") {
         const { kind: _kind, ...options } = arg;
         response = client.request(options);
+      } else if (arg.kind === "atomic") {
+        const { kind: _kind, operations, ...options } = arg;
+        if (typeof client.atomic !== "function") {
+          throw new Error(
+            "Fetchja Atomic Operations is not configured. Add AtomicOperations from 'fetchja/atomic' to the client's extensions.",
+          );
+        }
+
+        const { results, document, ...meta } = await client.atomic(operations, options);
+        return {
+          data: results,
+          meta: {
+            ...document,
+            ...meta,
+          } satisfies FetchjaBaseQueryMeta,
+        };
       } else {
         switch (arg.method) {
           case "GET": {

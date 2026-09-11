@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createApi } from "@reduxjs/toolkit/query";
+import { AtomicOperations } from "fetchja/atomic";
 import { http, HttpResponse } from "msw";
 import { assert, describe, expect, it } from "vite-plus/test";
 import { fetchjaBaseQuery } from "./index.ts";
@@ -302,6 +303,76 @@ describe("fetchjaBaseQuery", () => {
     expect(result.meta).toMatchObject({
       extraTopLevelKey: "extraValue",
     });
+  });
+
+  it("runs configured JSON:API Atomic Operations batches", async () => {
+    let requestBody: unknown;
+    let contentType: string | null = null;
+
+    server.use(
+      http.post(`${baseURL}/operations`, async ({ request }) => {
+        requestBody = await request.json();
+        contentType = request.headers.get("Content-Type");
+
+        return HttpResponse.json(
+          {
+            "atomic:results": [
+              {
+                data: {
+                  type: "articles",
+                  id: "1",
+                  attributes: { title: "Atomic" },
+                },
+              },
+              { data: null },
+            ],
+            meta: { transaction: "complete" },
+          },
+          { headers: jsonApiHeaders },
+        );
+      }),
+    );
+
+    const api = createApi({
+      baseQuery: fetchjaBaseQuery({ baseURL, extensions: [AtomicOperations] }),
+      endpoints: (builder) => ({
+        atomicArticles: builder.mutation<(Article | null)[], void>({
+          query: () => ({
+            kind: "atomic",
+            operations: (op) => [
+              op.add("article", { lid: "new-article", title: "Atomic" }),
+              op.remove("article", "2"),
+            ],
+          }),
+        }),
+      }),
+    });
+    const store = configureStore({
+      reducer: { [api.reducerPath]: api.reducer },
+      middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(api.middleware),
+    });
+    const result = await store.dispatch(api.endpoints.atomicArticles.initiate());
+
+    expect(result.data).toEqual([{ type: "articles", id: "1", title: "Atomic" }, null]);
+
+    expect(requestBody).toEqual({
+      "atomic:operations": [
+        {
+          op: "add",
+          data: { type: "articles", lid: "new-article", attributes: { title: "Atomic" } },
+        },
+        { op: "remove", ref: { type: "articles", id: "2" } },
+      ],
+    });
+    expect(contentType).toContain('ext="https://jsonapi.org/ext/atomic"');
+  });
+
+  it("explains how to enable atomic operations when the extension is missing", async () => {
+    const baseQuery = fetchjaBaseQuery({ baseURL });
+
+    await expect(baseQuery({ kind: "atomic", operations: () => [] })).rejects.toThrow(
+      "Fetchja Atomic Operations is not configured",
+    );
   });
 
   it("updates a resource via a mutation", async () => {
